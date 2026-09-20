@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "涉老取款紧急干预领域事件",
+  "description": "用于跨模块交换事实记录的公共信封。",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "aggregate_type",
+    "aggregate_id",
+    "occurred_at",
+    "version",
+    "summary"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "minLength": 8,
+      "description": "事件唯一标识"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "TRANSACTION_FLAGGED",
+        "CONTACT_ATTEMPTED",
+        "HOLD_APPLIED",
+        "AUTHORITY_RESPONDED",
+        "FUNDS_RELEASED"
+      ],
+      "description": "本领域事件类型"
+    },
+    "aggregate_type": {
+      "type": "string",
+      "enum": [
+        "withdrawal_case",
+        "observed_signal",
+        "protective_hold",
+        "final_decision"
+      ],
+      "description": "业务对象类型"
+    },
+    "aggregate_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "业务对象标识"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "事实发生时间"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "对象版本"
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 2,
+      "description": "中文事实摘要"
+    }
+  },
+  "additionalProperties": true
+}

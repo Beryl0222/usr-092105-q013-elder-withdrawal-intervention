@@ -1,0 +1,9 @@
+{
+  "event_id": "evt-092105-013-0001",
+  "event_type": "TRANSACTION_FLAGGED",
+  "aggregate_type": "withdrawal_case",
+  "aggregate_id": "elder-withdrawal-intervention-001",
+  "occurred_at": "2026-09-20T12:00:00+08:00",
+  "version": 1,
+  "summary": "登记涉老取款紧急干预的首条领域记录"
+}
