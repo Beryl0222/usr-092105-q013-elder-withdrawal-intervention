@@ -1,0 +1,155 @@
+[
+  {
+    "event_id": "evt-092105-013-0001",
+    "event_type": "TRANSACTION_FLAGGED",
+    "aggregate_type": "withdrawal_case",
+    "aggregate_id": "WC-20260920-013",
+    "occurred_at": "2026-09-20T14:00:00+08:00",
+    "version": 1,
+    "summary": "大额取款开案：陪同者代答、催促并阻止客户接电话",
+    "case_id": "WC-20260920-013",
+    "actor": { "role": "teller", "staff_id": "T118", "name": "李明" },
+    "data": {
+      "channel": "branch",
+      "customer_id": "C-8899",
+      "requested_amount_ccy": "CNY 1,200,000",
+      "stated_purpose": "购房首付",
+      "counterparty": "XX楼盘预售资金监管账户",
+      "companion_present": true,
+      "trigger_codes": ["companion.answers_for_customer", "companion.rushes", "companion.blocks_phone"]
+    }
+  },
+  {
+    "event_id": "evt-092105-013-sig01",
+    "event_type": "SIGNAL_RECORDED",
+    "aggregate_type": "observed_signal",
+    "aggregate_id": "sig-WC-20260920-013-01",
+    "occurred_at": "2026-09-20T14:02:00+08:00",
+    "version": 1,
+    "summary": "事实信号：陪同者三次替客户回答资金用途并示意客户不要说话",
+    "case_id": "WC-20260920-013",
+    "actor": { "role": "teller", "staff_id": "T118", "name": "李明" },
+    "data": {
+      "grade": "fact",
+      "code": "companion.answers_for_customer",
+      "detail": "询问取款用途时，陪同者三次抢在客户前回答，并对客户说‘你别跟他们说’",
+      "source": "teller"
+    }
+  },
+  {
+    "event_id": "evt-092105-013-comp01",
+    "event_type": "COMPANION_BEHAVIOR",
+    "aggregate_type": "withdrawal_case",
+    "aggregate_id": "WC-20260920-013",
+    "occurred_at": "2026-09-20T14:03:00+08:00",
+    "version": 2,
+    "summary": "陪同行为：催促、阻止客户接听核对电话",
+    "case_id": "WC-20260920-013",
+    "actor": { "role": "teller", "staff_id": "T118", "name": "李明" },
+    "data": {
+      "behaviors": ["rushes", "blocks_phone"],
+      "observed_detail": "陪同者反复说‘快点我赶时间’，客户手机响时按住客户手腕不让接听"
+    }
+  },
+  {
+    "event_id": "evt-092105-013-contact01",
+    "event_type": "CONTACT_ATTEMPTED",
+    "aggregate_type": "withdrawal_case",
+    "aggregate_id": "WC-20260920-013",
+    "occurred_at": "2026-09-20T14:04:00+08:00",
+    "version": 3,
+    "summary": "请客户在柜台独立接听回拨，被现场陪同者阻止",
+    "case_id": "WC-20260920-013",
+    "actor": { "role": "teller", "staff_id": "T118", "name": "李明" },
+    "data": {
+      "target": "customer_alone",
+      "method": "in_person",
+      "result": "blocked_on_site",
+      "note": "引导洽谈室单独沟通时陪同者坚持跟随并入座插话"
+    }
+  },
+  {
+    "event_id": "evt-092105-013-hold01",
+    "event_type": "HOLD_APPLIED",
+    "aggregate_type": "protective_hold",
+    "aggregate_id": "hold-WC-20260920-013-01",
+    "occurred_at": "2026-09-20T14:06:00+08:00",
+    "version": 1,
+    "summary": "主管凭具体事实批准初始保护暂停，截止 14:45，已交付书面告知",
+    "case_id": "WC-20260920-013",
+    "actor": { "role": "supervisor", "staff_id": "S042", "name": "王芳" },
+    "data": {
+      "reason_signal_refs": ["evt-092105-013-sig01", "evt-092105-013-contact01"],
+      "deadline_key": "SUPERVISOR_45MIN",
+      "deadline_at": "2026-09-20T14:45:00+08:00",
+      "approver": "主管 王芳(S042)",
+      "customer_notified_at": "2026-09-20T14:06:00+08:00",
+      "appeal_code": "APL-013-7"
+    }
+  },
+  {
+    "event_id": "evt-092105-013-contact02",
+    "event_type": "CONTACT_ATTEMPTED",
+    "aggregate_type": "withdrawal_case",
+    "aggregate_id": "WC-20260920-013",
+    "occurred_at": "2026-09-20T14:08:00+08:00",
+    "version": 4,
+    "summary": "预留紧急联系人（子女）来电反对取款——仅触发再核实，不否定客户意愿",
+    "case_id": "WC-20260920-013",
+    "actor": { "role": "teller", "staff_id": "T118", "name": "李明" },
+    "data": {
+      "target": "trusted_contact",
+      "method": "call",
+      "result": "conflicting_opinion",
+      "note": "子女称‘老人肯定被骗了，千万别放款’；已告知其反对不能代替客户本人意愿"
+    }
+  },
+  {
+    "event_id": "evt-092105-013-stmt01",
+    "event_type": "CUSTOMER_STATEMENT",
+    "aggregate_type": "withdrawal_case",
+    "aggregate_id": "WC-20260920-013",
+    "occurred_at": "2026-09-20T14:10:00+08:00",
+    "version": 5,
+    "summary": "客户在陪同者不在场时清楚、一致地表达购房首付意愿",
+    "case_id": "WC-20260920-013",
+    "actor": { "role": "teller", "staff_id": "T118", "name": "李明" },
+    "data": {
+      "separate_setting": true,
+      "in_own_words": "这 120 万是我给孙子买学区房的首付，合同编号和监管账户我都带了，外面那个人是我远房亲戚，他越催我越觉得不对劲，钱我今天就要按合同转走",
+      "consistent": true
+    }
+  },
+  {
+    "event_id": "evt-092105-013-rev01",
+    "event_type": "SUPERVISOR_REVIEWED",
+    "aggregate_type": "final_decision",
+    "aggregate_id": "fd-WC-20260920-013",
+    "occurred_at": "2026-09-20T14:20:00+08:00",
+    "version": 1,
+    "summary": "主管复核：单独表达一致、用途可形式核验，决定放行",
+    "case_id": "WC-20260920-013",
+    "actor": { "role": "supervisor", "staff_id": "S042", "name": "王芳" },
+    "data": {
+      "decision": "release",
+      "reviewer": "主管 王芳(S042)",
+      "basis_refs": ["evt-092105-013-stmt01", "evt-092105-013-contact02"],
+      "written_reason": "客户在单独沟通中对购房首付表述清楚一致，合同编号与监管账户形式相符；家属反对不构成否定依据"
+    }
+  },
+  {
+    "event_id": "evt-092105-013-rel01",
+    "event_type": "FUNDS_RELEASED",
+    "aggregate_type": "final_decision",
+    "aggregate_id": "fd-WC-20260920-013",
+    "occurred_at": "2026-09-20T14:20:00+08:00",
+    "version": 2,
+    "summary": "按主管复核决定放行，交易 20 分钟内完成",
+    "case_id": "WC-20260920-013",
+    "actor": { "role": "supervisor", "staff_id": "S042", "name": "王芳" },
+    "data": {
+      "release_reason": "supervisor_release",
+      "decision_ref": "evt-092105-013-rev01"
+    }
+  }
+]

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "涉老取款紧急干预领域事件",
-  "description": "用于跨模块交换事实记录的公共信封。",
+  "description": "跨模块交换事实记录的公共信封。event_id 全局唯一，来源重试沿用原 ID；occurred_at 保留事实真实发生时间。事件只追加，撤销/变更以新事件表达。",
   "type": "object",
   "required": [
     "event_id",
@@ -16,7 +16,7 @@
     "event_id": {
       "type": "string",
       "minLength": 8,
-      "description": "事件唯一标识"
+      "description": "事件唯一标识，重试必须沿用"
     },
     "event_type": {
       "type": "string",
@@ -25,9 +25,24 @@
         "CONTACT_ATTEMPTED",
         "HOLD_APPLIED",
         "AUTHORITY_RESPONDED",
-        "FUNDS_RELEASED"
+        "FUNDS_RELEASED",
+        "CASE_STATUS_CHANGED",
+        "CUSTOMER_STATEMENT",
+        "COMPANION_BEHAVIOR",
+        "APPEAL_FILED",
+        "ACCELERATION_REQUESTED",
+        "ACCELERATION_GRANTED",
+        "SIGNAL_RECORDED",
+        "SIGNAL_WITHDRAWN",
+        "HOLD_REVOKED",
+        "HOLD_EXPIRED",
+        "HOLD_EXTENDED",
+        "SUPERVISOR_REVIEWED",
+        "APPEAL_DECIDED",
+        "PAYMENT_STOPPED",
+        "DECISION_SUPERSEDED"
       ],
-      "description": "本领域事件类型"
+      "description": "本领域事件类型（前五项为原始语义，后续为兼容扩展）"
     },
     "aggregate_type": {
       "type": "string",
@@ -47,18 +62,481 @@
     "occurred_at": {
       "type": "string",
       "format": "date-time",
-      "description": "事实发生时间"
+      "description": "事实在来源系统真实发生的时间，重复通知不得改写"
+    },
+    "received_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "本服务接收时间（仅运维用途，时间轴一律以 occurred_at 为准）"
     },
     "version": {
       "type": "integer",
       "minimum": 1,
-      "description": "对象版本"
+      "description": "同一 aggregate_id 下从 1 递增；同版本内容冲突进异常队列"
     },
     "summary": {
       "type": "string",
       "minLength": 2,
       "description": "中文事实摘要"
+    },
+    "case_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "所属案件号，所有聚合事件均应回填以便归并"
+    },
+    "actor": {
+      "type": "object",
+      "description": "事件责任人/操作者",
+      "required": ["role"],
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": ["teller", "supervisor", "backup_supervisor", "branch_manager", "independent_reviewer", "fraud_liaison", "customer", "system", "police"]
+        },
+        "staff_id": { "type": "string" },
+        "name": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "data": {
+      "type": "object",
+      "description": "事件负载，结构随 event_type 而定（见 $defs）"
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false,
+  "$defs": {
+    "signal_grade": {
+      "type": "string",
+      "enum": ["fact", "impression", "system_notice"],
+      "description": "fact 可复现事实；impression 主观印象，单独不得支撑限制且不外溢；system_notice 系统提示"
+    },
+    "case_status": {
+      "type": "string",
+      "enum": ["OPENED", "IN_VERIFICATION", "HELD", "PENDING_APPEAL", "STOP_PAYMENT", "CLOSED_RELEASED"]
+    },
+    "authority_level": {
+      "type": "string",
+      "enum": ["L0", "L1", "L2", "L3"],
+      "description": "L0 无记录/仅电话；L1 口头建议；L2 受案/协查；L3 正式法律文书。仅 L3 可披露完整证据与资金去向"
+    },
+    "deadline_key": {
+      "type": "string",
+      "enum": ["INITIAL_VERIFICATION", "SUPERVISOR_45MIN", "EXTENSION_4H", "AUTHORITY_48H", "APPEAL_2H"],
+      "description": "对应设计文档 §8 时限段"
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "event_type": { "const": "TRANSACTION_FLAGGED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "withdrawal_case" },
+          "data": {
+            "type": "object",
+            "required": ["channel", "requested_amount_ccy"],
+            "properties": {
+              "channel": { "type": "string", "enum": ["branch", "call_center", "mobile", "online"] },
+              "customer_id": { "type": "string", "description": "客户号（外溢视图按客户归并用）" },
+              "requested_amount_ccy": { "type": "string", "description": "金额与币种，如 CNY 1,200,000" },
+              "stated_purpose": { "type": "string" },
+              "counterparty": { "type": "string" },
+              "trigger_codes": { "type": "array", "items": { "type": "string" } },
+              "companion_present": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "CASE_STATUS_CHANGED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "withdrawal_case" },
+          "data": {
+            "type": "object",
+            "required": ["from_status", "to_status", "reason_code"],
+            "properties": {
+              "from_status": { "$ref": "#/$defs/case_status" },
+              "to_status": { "$ref": "#/$defs/case_status" },
+              "reason_code": { "type": "string" },
+              "reason_detail": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "CUSTOMER_STATEMENT" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "withdrawal_case" },
+          "data": {
+            "type": "object",
+            "required": ["separate_setting", "in_own_words", "consistent"],
+            "properties": {
+              "separate_setting": { "type": "boolean", "description": "是否在陪同者不在场的单独沟通中取得" },
+              "in_own_words": { "type": "string", "description": "客户原话或平实转述" },
+              "consistent": { "type": "boolean", "description": "与此前用途表述是否一致" },
+              "recording_ref": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "COMPANION_BEHAVIOR" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "withdrawal_case" },
+          "data": {
+            "type": "object",
+            "required": ["behaviors"],
+            "properties": {
+              "behaviors": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["answers_for_customer", "rushes", "blocks_phone", "blocks_private_talk", "listens_in", "takes_documents", "other"]
+                },
+                "minItems": 1
+              },
+              "observed_detail": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "CONTACT_ATTEMPTED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "withdrawal_case" },
+          "data": {
+            "type": "object",
+            "required": ["target", "method", "result"],
+            "properties": {
+              "target": { "type": "string", "enum": ["customer_alone", "trusted_contact", "hotline_96110", "police"] },
+              "method": { "type": "string", "enum": ["in_person", "call", "callback", "message"] },
+              "result": {
+                "type": "string",
+                "enum": ["confirmed_intent", "conflicting_opinion", "unreachable", "blocked_on_site", "alert_hit", "no_alert"]
+              },
+              "ended_at": { "type": "string", "format": "date-time" },
+              "note": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "APPEAL_FILED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "withdrawal_case" },
+          "data": {
+            "type": "object",
+            "required": ["appeal_code", "channel"],
+            "properties": {
+              "appeal_code": { "type": "string" },
+              "channel": { "type": "string", "enum": ["qr_code", "hotline", "in_person"] },
+              "filed_by": { "type": "string", "description": "客户本人或其明确授权人" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "ACCELERATION_REQUESTED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "withdrawal_case" },
+          "data": {
+            "type": "object",
+            "required": ["reason"],
+            "properties": {
+              "reason": { "type": "string", "enum": ["house_purchase", "medical_emergency", "other_time_critical"] },
+              "evidence": {
+                "type": "object",
+                "properties": {
+                  "contract_ref": { "type": "string" },
+                  "agency_name": { "type": "string" },
+                  "counterparty_matches": { "type": "boolean" }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "ACCELERATION_GRANTED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "withdrawal_case" },
+          "data": {
+            "type": "object",
+            "required": ["granted", "approver"],
+            "properties": {
+              "granted": { "type": "boolean" },
+              "approver": { "type": "string" },
+              "deadline_multiplier": { "type": "number", "description": "时限系数，加速通过为 0.5" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "SIGNAL_RECORDED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "observed_signal" },
+          "data": {
+            "type": "object",
+            "required": ["grade", "code", "detail"],
+            "properties": {
+              "grade": { "$ref": "#/$defs/signal_grade" },
+              "code": { "type": "string", "description": "信号代码，如 companion.answers_for_customer" },
+              "detail": { "type": "string", "description": "情境、原话或行为，不作身份/医学定性" },
+              "source": { "type": "string", "enum": ["teller", "device", "system"] }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "SIGNAL_WITHDRAWN" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "observed_signal" },
+          "data": {
+            "type": "object",
+            "required": ["withdrawn_reason"],
+            "properties": {
+              "withdrawn_reason": { "type": "string" },
+              "withdrawn_by": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "HOLD_APPLIED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "protective_hold" },
+          "data": {
+            "type": "object",
+            "required": ["reason_signal_refs", "deadline_key", "deadline_at", "approver", "customer_notified_at"],
+            "properties": {
+              "reason_signal_refs": { "type": "array", "items": { "type": "string" }, "minItems": 1, "description": "具体事实理由：引用信号/联系事件 ID，不得仅写‘疑似诈骗’" },
+              "deadline_key": { "$ref": "#/$defs/deadline_key" },
+              "deadline_at": { "type": "string", "format": "date-time" },
+              "approver": { "type": "string" },
+              "customer_notified_at": { "type": "string", "format": "date-time" },
+              "appeal_code": { "type": "string" },
+              "accelerated": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "HOLD_EXTENDED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "protective_hold" },
+          "data": {
+            "type": "object",
+            "required": ["prior_hold_ref", "reason_signal_refs", "deadline_key", "deadline_at", "approver"],
+            "properties": {
+              "prior_hold_ref": { "type": "string" },
+              "reason_signal_refs": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+              "deadline_key": { "$ref": "#/$defs/deadline_key" },
+              "deadline_at": { "type": "string", "format": "date-time" },
+              "approver": { "type": "string" },
+              "authority_level": { "$ref": "#/$defs/authority_level" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "HOLD_REVOKED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "protective_hold" },
+          "data": {
+            "type": "object",
+            "required": ["source", "revoked_by"],
+            "properties": {
+              "source": { "type": "string", "enum": ["appeal_upheld", "appeal_timeout", "supervisor_review", "authority_clear"] },
+              "revoked_by": { "type": "string" },
+              "decision_ref": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "HOLD_EXPIRED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "protective_hold" },
+          "data": {
+            "type": "object",
+            "required": ["deadline_at", "responsible_role"],
+            "properties": {
+              "deadline_at": { "type": "string", "format": "date-time" },
+              "responsible_role": { "type": "string", "description": "到点未作出有效决定的责任人，计入考核" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "SUPERVISOR_REVIEWED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "final_decision" },
+          "data": {
+            "type": "object",
+            "required": ["decision", "reviewer", "basis_refs"],
+            "properties": {
+              "decision": { "type": "string", "enum": ["release", "continue", "escalate"] },
+              "reviewer": { "type": "string" },
+              "basis_refs": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+              "written_reason": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "APPEAL_DECIDED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "final_decision" },
+          "data": {
+            "type": "object",
+            "required": ["appeal_code", "upheld", "reviewer"],
+            "properties": {
+              "appeal_code": { "type": "string" },
+              "upheld": { "type": "boolean", "description": "true=申诉成立，撤销措施" },
+              "reviewer": { "type": "string", "description": "必须为非原经办人" },
+              "written_reason": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "AUTHORITY_RESPONDED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "final_decision" },
+          "data": {
+            "type": "object",
+            "required": ["authority_level"],
+            "properties": {
+              "authority_level": { "$ref": "#/$defs/authority_level" },
+              "case_number": { "type": "string", "description": "受案/文书编号，L2 起必填", "minLength": 1 },
+              "disclosure_scope": { "type": "string", "description": "L3 文书批准的披露范围" }
+            },
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": { "properties": { "authority_level": { "enum": ["L2", "L3"] } } },
+                "then": { "required": ["case_number"] }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "FUNDS_RELEASED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "final_decision" },
+          "data": {
+            "type": "object",
+            "required": ["release_reason"],
+            "properties": {
+              "release_reason": {
+                "type": "string",
+                "enum": ["verification_passed", "hold_expired", "appeal_upheld", "appeal_timeout", "supervisor_release", "customer_withdrew", "acceleration_clear"]
+              },
+              "decision_ref": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "PAYMENT_STOPPED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "final_decision" },
+          "data": {
+            "type": "object",
+            "required": ["basis_type", "approver"],
+            "properties": {
+              "basis_type": { "type": "string", "enum": ["customer_request", "legal_order"] },
+              "customer_request_ref": { "type": "string", "description": "basis_type=customer_request 时必填（书面/录音凭证）" },
+              "legal_case_number": { "type": "string", "description": "basis_type=legal_order 时必填（法律文书编号）" },
+              "approver": { "type": "string" },
+              "customer_notified_at": { "type": "string", "format": "date-time" }
+            },
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": { "properties": { "basis_type": { "const": "customer_request" } } },
+                "then": { "required": ["customer_request_ref"] }
+              },
+              {
+                "if": { "properties": { "basis_type": { "const": "legal_order" } } },
+                "then": { "required": ["legal_case_number"] }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "DECISION_SUPERSEDED" } } },
+      "then": {
+        "properties": {
+          "aggregate_type": { "const": "final_decision" },
+          "data": {
+            "type": "object",
+            "required": ["superseded_ref", "new_ref", "reason"],
+            "properties": {
+              "superseded_ref": { "type": "string" },
+              "new_ref": { "type": "string" },
+              "reason": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  ]
 }

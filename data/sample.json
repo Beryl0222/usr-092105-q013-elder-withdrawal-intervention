@@ -2,8 +2,23 @@
   "event_id": "evt-092105-013-0001",
   "event_type": "TRANSACTION_FLAGGED",
   "aggregate_type": "withdrawal_case",
-  "aggregate_id": "elder-withdrawal-intervention-001",
-  "occurred_at": "2026-09-20T12:00:00+08:00",
+  "aggregate_id": "WC-20260920-013",
+  "occurred_at": "2026-09-20T14:00:00+08:00",
   "version": 1,
-  "summary": "登记涉老取款紧急干预的首条领域记录"
+  "summary": "大额取款开案：陪同者代答、催促并阻止客户接电话",
+  "case_id": "WC-20260920-013",
+  "actor": { "role": "teller", "staff_id": "T118", "name": "李明" },
+  "data": {
+    "channel": "branch",
+    "customer_id": "C-8899",
+    "requested_amount_ccy": "CNY 1,200,000",
+    "stated_purpose": "购房首付",
+    "counterparty": "XX楼盘预售资金监管账户",
+    "companion_present": true,
+    "trigger_codes": [
+      "companion.answers_for_customer",
+      "companion.rushes",
+      "companion.blocks_phone"
+    ]
+  }
 }
