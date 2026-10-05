@@ -1,0 +1,267 @@
+[
+  {
+    "event_id": "evt-20260921-0001",
+    "event_type": "TRANSACTION_FLAGGED",
+    "aggregate_type": "withdrawal_case",
+    "aggregate_id": "case-20260921-001",
+    "occurred_at": "2026-09-21T09:05:00+08:00",
+    "version": 1,
+    "summary": "柜面登记：七旬客户大额取款触发核实",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "customer_id": "cust-310112",
+      "amount": 480000,
+      "currency": "CNY",
+      "declared_purpose": "购房首付",
+      "destination": "某房企资金监管账户 6228****9012",
+      "channel": "柜面",
+      "teller_id": "teller-07",
+      "trigger": { "kind": "amount", "detail": "单笔48万元达到大额关注标准，客户72岁" }
+    }
+  },
+  {
+    "event_id": "evt-20260921-0002",
+    "event_type": "COMPANION_PROFILE_RECORDED",
+    "aggregate_type": "withdrawal_case",
+    "aggregate_id": "case-20260921-001",
+    "occurred_at": "2026-09-21T09:06:00+08:00",
+    "version": 2,
+    "summary": "陪同关系登记：自称侄子的男子陪同",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "relationship": "自称侄子",
+      "answers_for_customer": true,
+      "rushing": true,
+      "blocks_contact": true,
+      "note": "柜员询问用途时由陪同者抢答"
+    }
+  },
+  {
+    "event_id": "evt-20260921-0003",
+    "event_type": "SELF_EXPRESSION_RECORDED",
+    "aggregate_type": "withdrawal_case",
+    "aggregate_id": "case-20260921-001",
+    "occurred_at": "2026-09-21T09:07:00+08:00",
+    "version": 3,
+    "summary": "客户未能独立陈述，用途由陪同者代述",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "statement": "客户未独立陈述，取款用途由陪同者代述",
+      "expressed_independently": false,
+      "companion_present": true,
+      "recorded_by": "teller-07"
+    }
+  },
+  {
+    "event_id": "evt-20260921-0004",
+    "event_type": "SIGNAL_RECORDED",
+    "aggregate_type": "observed_signal",
+    "aggregate_id": "sig-20260921-01",
+    "occurred_at": "2026-09-21T09:08:00+08:00",
+    "version": 1,
+    "summary": "现场信号：陪同者代替客户回答问题",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "kind": "companion_answers",
+      "observation": "陪同者代替客户回答取款用途提问"
+    }
+  },
+  {
+    "event_id": "evt-20260921-0005",
+    "event_type": "SIGNAL_RECORDED",
+    "aggregate_type": "observed_signal",
+    "aggregate_id": "sig-20260921-02",
+    "occurred_at": "2026-09-21T09:08:30+08:00",
+    "version": 1,
+    "summary": "现场信号：陪同者多次催促立即放款",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "kind": "rushing",
+      "observation": "陪同者多次催促柜员立即放款"
+    }
+  },
+  {
+    "event_id": "evt-20260921-0006",
+    "event_type": "SIGNAL_RECORDED",
+    "aggregate_type": "observed_signal",
+    "aggregate_id": "sig-20260921-03",
+    "occurred_at": "2026-09-21T09:09:00+08:00",
+    "version": 1,
+    "summary": "现场信号：客户手机来电被陪同者按断",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "kind": "blocks_contact",
+      "observation": "客户手机来电被陪同者按断",
+      "assessment": "疑似受他人操控"
+    }
+  },
+  {
+    "event_id": "evt-20260921-0007",
+    "event_type": "CONTACT_ATTEMPTED",
+    "aggregate_type": "withdrawal_case",
+    "aggregate_id": "case-20260921-001",
+    "occurred_at": "2026-09-21T09:10:00+08:00",
+    "version": 4,
+    "summary": "联系尝试：致电客户本人被阻断",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "channel": "phone",
+      "target": "customer",
+      "result": "blocked",
+      "note": "电话被陪同者按断"
+    }
+  },
+  {
+    "event_id": "evt-20260921-0008",
+    "event_type": "CONTACT_ATTEMPTED",
+    "aggregate_type": "withdrawal_case",
+    "aggregate_id": "case-20260921-001",
+    "occurred_at": "2026-09-21T09:12:00+08:00",
+    "version": 5,
+    "summary": "联系尝试：预留紧急联系人（女儿）未接听",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "channel": "phone",
+      "target": "emergency_contact",
+      "result": "no_answer",
+      "note": "预留联系人（女儿）未接听"
+    }
+  },
+  {
+    "event_id": "evt-20260921-0009",
+    "event_type": "SUPERVISOR_REVIEWED",
+    "aggregate_type": "withdrawal_case",
+    "aggregate_id": "case-20260921-001",
+    "occurred_at": "2026-09-21T09:25:00+08:00",
+    "version": 6,
+    "summary": "主管复核：多项现场信号且联系受阻，确认风险",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "reviewer_id": "sup-01",
+      "reviewer_role": "网点主管",
+      "conclusion": "concern_confirmed",
+      "rationale": "多项现场可观察信号且无法联系客户本人核实，需采取保护性措施"
+    }
+  },
+  {
+    "event_id": "evt-20260921-0010",
+    "event_type": "HOLD_APPLIED",
+    "aggregate_type": "protective_hold",
+    "aggregate_id": "hold-20260921-01",
+    "occurred_at": "2026-09-21T09:30:00+08:00",
+    "version": 1,
+    "summary": "保护性止付24小时：客户意愿无法独立确认",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "reason": "陪同者代答并阻断联系，客户意愿无法独立确认",
+      "duration_minutes": 1440,
+      "escalation_owner_role": "网点主管",
+      "decider_id": "sup-01",
+      "decider_role": "网点主管"
+    }
+  },
+  {
+    "event_id": "evt-20260921-0011",
+    "event_type": "CONTACT_ATTEMPTED",
+    "aggregate_type": "withdrawal_case",
+    "aggregate_id": "case-20260921-001",
+    "occurred_at": "2026-09-21T10:05:00+08:00",
+    "version": 7,
+    "summary": "联系尝试：女儿回电表示不知情，将立即到场",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "channel": "phone",
+      "target": "emergency_contact",
+      "result": "reached",
+      "note": "女儿回电表示对该笔取款不知情，将立即到场"
+    }
+  },
+  {
+    "event_id": "evt-20260921-0012",
+    "event_type": "SELF_EXPRESSION_RECORDED",
+    "aggregate_type": "withdrawal_case",
+    "aggregate_id": "case-20260921-001",
+    "occurred_at": "2026-09-21T11:20:00+08:00",
+    "version": 8,
+    "summary": "女儿到场后客户独立陈述：确为购房首付，系本人自愿",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "statement": "客户独立陈述：取款用于儿子婚房首付，系本人自愿",
+      "expressed_independently": true,
+      "companion_present": false,
+      "recorded_by": "teller-07"
+    }
+  },
+  {
+    "event_id": "evt-20260921-0013",
+    "event_type": "SIGNAL_RETRACTED",
+    "aggregate_type": "observed_signal",
+    "aggregate_id": "sig-20260921-03",
+    "occurred_at": "2026-09-21T11:22:00+08:00",
+    "version": 2,
+    "summary": "撤回主观判断：客户独立陈述及家属佐证，排除受操控可能",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "basis": "客户独立陈述及女儿佐证，排除受操控可能"
+    }
+  },
+  {
+    "event_id": "evt-20260921-0014",
+    "event_type": "SUPERVISOR_REVIEWED",
+    "aggregate_type": "withdrawal_case",
+    "aggregate_id": "case-20260921-001",
+    "occurred_at": "2026-09-21T11:25:00+08:00",
+    "version": 9,
+    "summary": "主管复核：客户独立表达意愿清晰，风险排除",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "reviewer_id": "sup-01",
+      "reviewer_role": "网点主管",
+      "conclusion": "no_concern",
+      "rationale": "客户独立表达意愿清晰，家属到场佐证，风险排除"
+    }
+  },
+  {
+    "event_id": "evt-20260921-0015",
+    "event_type": "HOLD_LIFTED",
+    "aggregate_type": "protective_hold",
+    "aggregate_id": "hold-20260921-01",
+    "occurred_at": "2026-09-21T11:28:00+08:00",
+    "version": 2,
+    "summary": "解除保护性止付：复核排除风险",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "basis": "复核排除风险，解除保护性止付",
+      "actor_role": "网点主管"
+    }
+  },
+  {
+    "event_id": "evt-20260921-0016",
+    "event_type": "DECISION_RECORDED",
+    "aggregate_type": "final_decision",
+    "aggregate_id": "decision-20260921-01",
+    "occurred_at": "2026-09-21T11:30:00+08:00",
+    "version": 1,
+    "summary": "最终决定：放行",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "outcome": "release",
+      "basis": "客户独立陈述购房用途，女儿到场佐证，主管复核排除风险",
+      "decider_id": "sup-01",
+      "decider_role": "网点主管"
+    }
+  },
+  {
+    "event_id": "evt-20260921-0017",
+    "event_type": "FUNDS_RELEASED",
+    "aggregate_type": "final_decision",
+    "aggregate_id": "decision-20260921-01",
+    "occurred_at": "2026-09-21T11:31:00+08:00",
+    "version": 2,
+    "summary": "支付系统执行放行",
+    "payload": {
+      "case_id": "case-20260921-001",
+      "payment_ref": "pay-20260921-480000"
+    }
+  }
+]

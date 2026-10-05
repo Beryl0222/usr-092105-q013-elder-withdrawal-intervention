@@ -1,5 +1,5 @@
 [project]
 name = "domain-event-base"
-version = "0.1.0"
-description = "领域事件基础校验"
+version = "0.2.0"
+description = "涉老取款紧急干预领域事件与紧急干预服务"
 requires-python = ">=3.11"

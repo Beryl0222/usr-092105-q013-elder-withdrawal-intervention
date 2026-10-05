@@ -22,10 +22,21 @@
       "type": "string",
       "enum": [
         "TRANSACTION_FLAGGED",
+        "SELF_EXPRESSION_RECORDED",
+        "COMPANION_PROFILE_RECORDED",
         "CONTACT_ATTEMPTED",
+        "SUPERVISOR_REVIEWED",
+        "SIGNAL_RECORDED",
+        "SIGNAL_CONFIRMED",
+        "SIGNAL_RETRACTED",
         "HOLD_APPLIED",
-        "AUTHORITY_RESPONDED",
-        "FUNDS_RELEASED"
+        "HOLD_EXTENDED",
+        "HOLD_LIFTED",
+        "DECISION_RECORDED",
+        "FUNDS_RELEASED",
+        "APPEAL_FILED",
+        "APPEAL_REVIEWED",
+        "AUTHORITY_RESPONDED"
       ],
       "description": "本领域事件类型"
     },
@@ -58,6 +69,10 @@
       "type": "string",
       "minLength": 2,
       "description": "中文事实摘要"
+    },
+    "payload": {
+      "type": "object",
+      "description": "业务载荷，字段约定见 src/intervention/events.py"
     }
   },
   "additionalProperties": true
